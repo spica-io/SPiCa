@@ -1,6 +1,6 @@
-# Netty Spica Server
+# SPiCa Server
 
-이 프로젝트는 **Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store**입니다.
+**Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store**.
 클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET` 명령어를 사용할 수 있습니다.
 
 ## Features
@@ -17,13 +17,13 @@ Netty의 비동기 이벤트 기반 아키텍처를 따릅니다.
 ### Core Components
 
 1.  **EventLoopGroup**:
-    *   **Boss Group**: 클라이언트 연결 수락 (Accept)
-    *   **Worker Group**: I/O 처리 및 비즈니스 로직 실행
+    *   **Boss Group**: 클라이언트 연결 수락
+    *   **Worker Group**: I/O 처리
 2.  **ChannelPipeline**:
-    *   `LineBasedFrameDecoder`: 줄바꿈(`\n`) 단위로 패킷 분리
+    *   `LineBasedFrameDecoder`: 패킷 분리
     *   `StringDecoder`: 바이트를 문자열로 변환
     *   `StringEncoder`: 문자열을 바이트로 변환
-    *   `SpicaServerHandler`: 명령어 파싱 및 실행 (비즈니스 로직)
+    *   `Handler`: 명령어 파싱 및 실행
 
 ### Data Flow
 
@@ -125,4 +125,3 @@ echo "SET mykey myvalue" | nc localhost 6379
 echo "GET mykey" | nc localhost 6379
 # 응답: myvalue
 ```
-# inmemory-key-value-storage
