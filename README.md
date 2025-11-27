@@ -210,3 +210,7 @@ echo "SET mykey myvalue" | nc localhost 6379
 echo "GET mykey" | nc localhost 6379
 # 응답: myvalue
 ```
+
+---
+
+updatedAt: 2025.11.27
