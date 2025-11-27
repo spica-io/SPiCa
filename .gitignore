@@ -1,0 +1,12 @@
+# IDE specific
+.vscode/
+.idea/
+.DS_Store
+
+# Build output
+build/
+out/
+.gradle/
+
+# Libraries
+lib/
