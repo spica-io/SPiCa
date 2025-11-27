@@ -92,7 +92,7 @@ sequenceDiagram
 ## How to Run
 
 ### Prerequisites
-- Java 11 or higher
+- Java 24 or higher
 - Gradle
 
 ### Run Server
