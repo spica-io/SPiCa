@@ -1,6 +1,6 @@
 # SPiCa Server
 
-**Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store**.
+**Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store**. <br/>
 클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET` 명령어를 사용할 수 있습니다.
 
 ## Features
