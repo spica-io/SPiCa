@@ -8,7 +8,7 @@
 *   **PING**: 서버 상태 확인 (`PONG` 응답)
 *   **SET**: 키-값 저장 (`SET key value`)
 *   **GET**: 키로 값 조회 (`GET key`)
-*   **In-Memory Storage**: `ConcurrentHashMap`을 사용한 스레드 안전한 데이터 저장
+*   **In-Memory Storage**: `ConcurrentHashMap`을 사용한 Thread-safe한 데이터 저장
 
 ## Architecture (Component Specifications)
 
