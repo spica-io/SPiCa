@@ -33,18 +33,6 @@
 * **Transport Adaptation Layer (Outbound):**
     * `StringEncoder`: 응답 객체를 네트워크 전송을 위한 직렬화된 바이트 스트림으로 변환합니다.
 
-## Data Flow Lifecycle
-
-데이터의 흐름은 양방향(Duplex) 파이프라인을 통해 다음과 같은 상태 전이(State Transition)를 거칩니다.
-
-1.  **Ingress (Connection & Read):**
-    * Client Connection $\rightarrow$ Boss Group (Accept) $\rightarrow$ Worker Group (Registration).
-    * Socket Read $\rightarrow$ **[Framing]** (Byte Stream assembly) $\rightarrow$ **[Decoding]** (Object instantiation).
-2.  **Processing (Execution):**
-    * Decoded Command $\rightarrow$ Handler Routing $\rightarrow$ Business Logic Execution (e.g., `ConcurrentHashMap` Access).
-3.  **Egress (Write & Flush):**
-    * Execution Result $\rightarrow$ `ChannelHandlerContext.write()` $\rightarrow$ **[Encoding]** (Serialization) $\rightarrow$ Socket Buffer Flush $\rightarrow$ Client.
-
 ## Diagrams
 
 ### Server Structure 
@@ -173,6 +161,18 @@ sequenceDiagram
     H-->>S: writeAndFlush("hello\n")
     S-->>C: "hello\n"
 ```
+
+## Data Flow Lifecycle
+
+데이터의 흐름은 양방향(Duplex) 파이프라인을 통해 다음과 같은 상태 전이(State Transition)를 거칩니다.
+
+1.  **Ingress (Connection & Read):**
+    * Client Connection $\rightarrow$ Boss Group (Accept) $\rightarrow$ Worker Group (Registration).
+    * Socket Read $\rightarrow$ **[Framing]** (Byte Stream assembly) $\rightarrow$ **[Decoding]** (Object instantiation).
+2.  **Processing (Execution):**
+    * Decoded Command $\rightarrow$ Handler Routing $\rightarrow$ Business Logic Execution (e.g., `ConcurrentHashMap` Access).
+3.  **Egress (Write & Flush):**
+    * Execution Result $\rightarrow$ `ChannelHandlerContext.write()` $\rightarrow$ **[Encoding]** (Serialization) $\rightarrow$ Socket Buffer Flush $\rightarrow$ Client.
 
 ## How to Run
 
