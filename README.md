@@ -33,27 +33,98 @@ Netty의 비동기 이벤트 기반 아키텍처를 따릅니다.
 
 ## Diagrams
 
-### Server Structure
+### Server Structure 
 
 ```mermaid
 graph TD
-    Client["Client (nc localhost 6379)"] -->|Connect| Boss[Boss EventLoopGroup]
-    Boss -->|Register Channel| Worker[Worker EventLoopGroup]
-    
-    subgraph "Worker Thread"
-        Worker -->|Read/Write| Pipeline[ChannelPipeline]
+    %% --- [Nodes: External Actors] ---
+    User["Developer / App Main"]:::actor
+    Client["Remote TCP Client"]:::client
+
+    %% --- [Subgraph: Server Context] ---
+    subgraph APP ["Application Layer (JVM)"]
+        direction TB
         
-        subgraph "Pipeline"
-            FrameDec[LineBasedFrameDecoder] --> StringDec[StringDecoder]
-            StringDec --> Handler[SpicaServerHandler]
-            Handler --> StringEnc[StringEncoder]
+        %% Config Component
+        CONFIG[("ServerConfiguration\n(Port, Threads, FrameLength)")]:::config
+        
+        %% Main Server Class
+        subgraph NETTY_SERVER ["NettyServer Class"]
+            direction TB
+            START((start)):::method
+            STOP((stop)):::method
+            BLOCK((blockUntilClose)):::method
+            
+            BOOTSTRAP["ServerBootstrap\n(Factory)"]:::netty
         end
         
-        Handler <-->|Put/Get| Map[(ConcurrentHashMap)]
+        %% Dependency Injection
+        CONFIG -.->|Injects settings| NETTY_SERVER
+        User -->|1. calls| START
     end
+
+    %% --- [Subgraph: Netty Reactor Layer] ---
+    subgraph REACTOR ["Netty Reactor Layer (Event Loops)"]
+        direction TB
+        
+        BOSS["Boss Group\n(NioEventLoopGroup)\n[Acceptor Thread]"]:::boss
+        WORKER["Worker Group\n(NioEventLoopGroup)\n[I/O Threads]"]:::worker
+        
+        START -->|2. init & bind| BOSS
+        START -->|3. init| WORKER
+        BOSS -->|4. accepts connection\n& registers| WORKER
+        STOP -->|shutdownGracefully| BOSS & WORKER
+    end
+
+    %% --- [Subgraph: The Pipeline (Per Connection)] ---
+    subgraph PIPELINE ["SocketChannel Pipeline (Runtime)"]
+        direction TB
+        
+        SOCKET[("Socket Channel")]:::socket
+        
+        subgraph HANDLERS ["Handler Chain"]
+            direction TB
+            
+            %% Inbound Flow
+            subgraph INBOUND ["Inbound Flow (Read)"]
+                H1["1. LineBasedFrameDecoder\n(ByteBuf -> ByteBuf [Framed])"]:::decoder
+                H2["2. StringDecoder\n(ByteBuf -> String)"]:::decoder
+                H3["4. PingPongHandler\n(Biz Logic)"]:::handler
+            end
+
+            %% Outbound Flow
+            subgraph OUTBOUND ["Outbound Flow (Write)"]
+                H4["3. StringEncoder\n(String -> ByteBuf)"]:::encoder
+            end
+        end
+
+        %% Flow connections
+        Client <==>|TCP/IP| SOCKET
+        SOCKET ==>|ByteBuf Stream| H1
+        H1 ==>|Frame| H2
+        H2 ==>|String| H3
+        
+        %% [FIXED LINE] 점선 화살표 문법 수정
+        H3 -. "ctx.write('Pong')" .-> H4
+        H4 -. "Encoded Bytes" .-> SOCKET
+        
+        WORKER -.->|executes| HANDLERS
+    end
+
+    %% --- [Styling Definitions] ---
+    classDef actor fill:#1a237e,stroke:#fff,stroke-width:2px,color:#fff
+    classDef client fill:#b71c1c,stroke:#fff,stroke-width:2px,color:#fff
+    classDef config fill:#fbc02d,stroke:#333,stroke-width:1px,color:#333
+    classDef method fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#333,stroke-dasharray: 5 5
+    classDef netty fill:#e0f7fa,stroke:#006064,stroke-width:2px,color:#006064
+    classDef boss fill:#3f51b5,stroke:#fff,stroke-width:2px,color:#fff
+    classDef worker fill:#039be5,stroke:#fff,stroke-width:2px,color:#fff
+    classDef socket fill:#4e342e,stroke:#fff,stroke-width:2px,color:#fff
+    classDef decoder fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#2e7d32
+    classDef encoder fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2
+    classDef handler fill:#212121,stroke:#00e676,stroke-width:3px,color:#fff
     
-    Handler -->|Response| StringEnc
-    StringEnc -->|Send Bytes| Client
+    linkStyle default stroke:#546e7a,stroke-width:2px,fill:none
 ```
 
 ### Sequence Diagram
