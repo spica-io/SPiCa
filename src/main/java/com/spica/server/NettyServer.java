@@ -1,5 +1,6 @@
-package com.spica;
+package com.spica.server;
 
+import com.spica.handler.PingPongHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;

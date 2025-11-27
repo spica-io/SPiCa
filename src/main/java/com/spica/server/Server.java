@@ -1,4 +1,4 @@
-package com.spica;
+package com.spica.server;
 
 public interface Server {
     void start() throws InterruptedException;

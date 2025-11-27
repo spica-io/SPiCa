@@ -1,6 +1,6 @@
-package com.spica;
+package com.spica.server;
 
-record ServerConfiguration(
+public record ServerConfiguration(
         int port,
         int bossThreads,
         int workerThreads,

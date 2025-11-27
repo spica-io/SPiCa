@@ -1,11 +1,11 @@
-package com.spica;
+package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class PingPongHandler extends SimpleChannelInboundHandler<String> {
+public class PingPongHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(PingPongHandler.class);
 
     @Override
