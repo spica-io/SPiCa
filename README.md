@@ -213,4 +213,4 @@ echo "GET mykey" | nc localhost 6379
 
 ---
 
-updatedAt: 2025.11.27
+updatedAt: 2025.12.2
