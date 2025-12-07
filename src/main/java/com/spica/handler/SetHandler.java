@@ -16,10 +16,14 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: '%s'".formatted(msg));
         if (msg.isBlank()) {
-            ctx.writeAndFlush("비어있다!!!!!!!!!!\n");
+            ctx.writeAndFlush("비어있습니다.\n");
             return;
         }
         final String[] input = msg.split(" ");
+        if (input.length != 3) {
+            ctx.writeAndFlush("파라미터 개수는 3개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
+            return;
+        }
         final String command = input[0];
         final String key = input[1];
         final String value = input[2];
