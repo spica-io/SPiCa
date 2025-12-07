@@ -20,12 +20,12 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
         final String key = input[1];
         final String value = input[2];
 
-        if ("SET".equalsIgnoreCase(command)) {
-            store.put(key, value);
-            ctx.writeAndFlush("OK\n");
-        } else {
+        if (!"SET".equalsIgnoreCase(command)) {
             ctx.writeAndFlush("Unknown command: " + msg + "\n");
+            return;
         }
+        store.put(key, value);
+        ctx.writeAndFlush("OK\n");
     }
 
     @Override
