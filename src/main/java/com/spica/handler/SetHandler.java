@@ -14,14 +14,12 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) {
-        // SET : 사용자에게 {key}와 {value}를 받아 저장하는 명령어이다. 예) SET 김승원 윤지원
-        final String[] input = msg.split(" "); // ["SET", "김승원", "윤지원"]
-        final String command = input[0];   // "SET"
-        final String key = input[1];       // "김승원"
-        final String value = input[2];     // "윤지원"
+        final String[] input = msg.split(" ");
+        final String command = input[0];
+        final String key = input[1];
+        final String value = input[2];
 
         if ("SET".equalsIgnoreCase(command)) {
-            // store에 저장 수행!
             store.put(key, value);
             ctx.writeAndFlush("OK\n");
         } else {
