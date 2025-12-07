@@ -22,7 +22,8 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
 
         if ("SET".equalsIgnoreCase(command)) {
             // store에 저장 수행!
-            ctx.writeAndFlush("입력된, command:" + command + " key:" + key + " value:" + value);
+            store.put(key, value);
+            ctx.writeAndFlush("OK\n");
         } else {
             ctx.writeAndFlush("Unknown command: " + msg + "\n");
         }
