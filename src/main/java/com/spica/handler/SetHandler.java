@@ -14,6 +14,7 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) {
+        log.info("Received: '%s'".formatted(msg));
         final String[] input = msg.split(" ");
         final String command = input[0];
         final String key = input[1];
