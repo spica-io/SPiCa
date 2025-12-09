@@ -1,14 +1,12 @@
 package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class SetHandler extends SimpleChannelInboundHandler<String> {
+public class SetHandler {
     private static final Logger log = LoggerFactory.getLogger(SetHandler.class);
     private final Map<String, String> store;
 
@@ -16,8 +14,7 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
         this.store = store;
     }
 
-    @Override
-    protected void channelRead0(final ChannelHandlerContext ctx, final String msg) {
+    void channelRead0(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: '%s'".formatted(msg));
         if (msg.isBlank()) {
             ctx.writeAndFlush("비어있습니다.\n");
@@ -41,11 +38,5 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
             return;
         }
         ctx.writeAndFlush("OK\n");
-    }
-
-    @Override
-    public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
-        log.error("Exception caught in SetHandler", cause);
-        ctx.close();
     }
 }
