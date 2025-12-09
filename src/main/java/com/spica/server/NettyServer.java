@@ -1,6 +1,7 @@
 package com.spica.server;
 
 import com.spica.handler.PingPongHandler;
+import com.spica.handler.SetHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -15,9 +16,13 @@ import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class NettyServer implements Server {
     private static final Logger log = LoggerFactory.getLogger(NettyServer.class);
     private final ServerConfiguration config;
+    private final Map<String, String> store = new ConcurrentHashMap<>();
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -41,7 +46,8 @@ public class NettyServer implements Server {
                         ch.pipeline().addLast(new LineBasedFrameDecoder(config.maxFrameLength()));
                         ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
                         ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                        ch.pipeline().addLast(new PingPongHandler());
+//                        ch.pipeline().addLast(new PingPongHandler());
+                        ch.pipeline().addLast(new SetHandler(store));
                     }
                 });
 
