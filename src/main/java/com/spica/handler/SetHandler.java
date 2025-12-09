@@ -41,7 +41,7 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
-        cause.printStackTrace();
+        log.error("Exception caught in SetHandler", cause);
         ctx.close();
     }
 }
