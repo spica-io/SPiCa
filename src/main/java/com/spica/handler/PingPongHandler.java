@@ -9,11 +9,6 @@ public class PingPongHandler {
 
     void handle(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: " + msg);
-
-        if ("Ping".equalsIgnoreCase(msg)) {
-            ctx.writeAndFlush("Pong\n");
-        } else {
-            ctx.writeAndFlush("Unknown command: " + msg + "\n");
-        }
+        ctx.writeAndFlush("Pong\n");
     }
 }

@@ -26,6 +26,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
             setHandler.handle(ctx, msg);
             return;
         }
+        ctx.writeAndFlush("Unknown command: " + msg + "\n");
     }
 
     @Override

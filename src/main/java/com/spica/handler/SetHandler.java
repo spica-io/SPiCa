@@ -16,10 +16,6 @@ public class SetHandler {
 
     void handle(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: '%s'".formatted(msg));
-        if (msg.isBlank()) {
-            ctx.writeAndFlush("비어있습니다.\n");
-            return;
-        }
         final String[] input = msg.trim().split("\\s+");
         if (input.length != 3) {
             ctx.writeAndFlush("파라미터 개수는 3개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
@@ -29,10 +25,6 @@ public class SetHandler {
         final String key = input[1];
         final String value = input[2];
 
-        if (!"SET".equalsIgnoreCase(command)) {
-            ctx.writeAndFlush("Unknown command: " + msg + "\n");
-            return;
-        }
         if (store.putIfAbsent(key, value) != null) {
             ctx.writeAndFlush("중복 key: " + key + "\n");
             return;
