@@ -19,7 +19,7 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
             ctx.writeAndFlush("비어있습니다.\n");
             return;
         }
-        final String[] input = msg.split(" ");
+        final String[] input = msg.trim().split("\\s+");
         if (input.length != 3) {
             ctx.writeAndFlush("파라미터 개수는 3개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
             return;
