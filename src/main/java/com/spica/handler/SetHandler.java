@@ -32,11 +32,10 @@ public class SetHandler extends SimpleChannelInboundHandler<String> {
             ctx.writeAndFlush("Unknown command: " + msg + "\n");
             return;
         }
-        if (store.containsKey(key)) {
+        if (store.putIfAbsent(key, value) != null) {
             ctx.writeAndFlush("중복 key: " + key + "\n");
             return;
         }
-        store.put(key, value);
         ctx.writeAndFlush("OK\n");
     }
 
