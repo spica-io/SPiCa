@@ -45,7 +45,7 @@ public class NettyServer implements Server {
                         ch.pipeline().addLast(new LineBasedFrameDecoder(config.maxFrameLength()));
                         ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
                         ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                        ch.pipeline().addLast(new CommandHandler());
+                        ch.pipeline().addLast(new CommandHandler(store));
                     }
                 });
 
