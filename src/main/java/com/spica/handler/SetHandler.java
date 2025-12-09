@@ -14,7 +14,7 @@ public class SetHandler {
         this.store = store;
     }
 
-    void channelRead0(final ChannelHandlerContext ctx, final String msg) {
+    void handle(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: '%s'".formatted(msg));
         if (msg.isBlank()) {
             ctx.writeAndFlush("비어있습니다.\n");

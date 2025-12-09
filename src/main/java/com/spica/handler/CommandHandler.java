@@ -18,12 +18,12 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
         if ("PING".equalsIgnoreCase(msg)) {
-            pingPongHandler.channelRead0(ctx, msg);
+            pingPongHandler.handle(ctx, msg);
             return;
         }
 
         if ("SET".equalsIgnoreCase(msg.split("\\s+")[0])) {
-            setHandler.channelRead0(ctx, msg);
+            setHandler.handle(ctx, msg);
             return;
         }
     }

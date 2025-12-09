@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 public class PingPongHandler {
     private static final Logger log = LoggerFactory.getLogger(PingPongHandler.class);
 
-    void channelRead0(final ChannelHandlerContext ctx, final String msg) {
+    void handle(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: " + msg);
 
         if ("Ping".equalsIgnoreCase(msg)) {
