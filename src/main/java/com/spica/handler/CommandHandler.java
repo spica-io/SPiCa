@@ -5,26 +5,24 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
-    private final Map<String, String> store;
+    private final PingPongHandler pingPongHandler;
+    private final SetHandler setHandler;
 
-    public CommandHandler(final Map<String, String> store) {
-        this.store = store;
+    public CommandHandler(PingPongHandler pingPongHandler, SetHandler setHandler) {
+        this.pingPongHandler = pingPongHandler;
+        this.setHandler = setHandler;
     }
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
         if ("PING".equalsIgnoreCase(msg)) {
-            PingPongHandler pingPongHandler = new PingPongHandler();
             pingPongHandler.channelRead0(ctx, msg);
             return;
         }
 
         if ("SET".equalsIgnoreCase(msg.split("\\s+")[0])) {
-            SetHandler setHandler = new SetHandler(store);
             setHandler.channelRead0(ctx, msg);
             return;
         }
