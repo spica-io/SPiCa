@@ -1,7 +1,6 @@
 package com.spica.server;
 
-import com.spica.handler.PingPongHandler;
-import com.spica.handler.SetHandler;
+import com.spica.handler.CommandHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -46,8 +45,7 @@ public class NettyServer implements Server {
                         ch.pipeline().addLast(new LineBasedFrameDecoder(config.maxFrameLength()));
                         ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
                         ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-//                        ch.pipeline().addLast(new PingPongHandler());
-                        ch.pipeline().addLast(new SetHandler(store));
+                        ch.pipeline().addLast(new CommandHandler());
                     }
                 });
 
