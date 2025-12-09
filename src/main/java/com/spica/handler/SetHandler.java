@@ -10,7 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SetHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(SetHandler.class);
-    private final Map<String, String> store = new ConcurrentHashMap<>();
+    private final Map<String, String> store;
+
+    public SetHandler(final Map<String, String> store) {
+        this.store = store;
+    }
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) {
