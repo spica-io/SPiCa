@@ -26,7 +26,10 @@ public class DeleteHandler {
         final String command = input[0];
         final String key = input[1];
 
-        store.remove(key);
+        if (store.remove(key) == null) {
+            ctx.writeAndFlush("존재하지 않는 key입니다.\n");
+            return;
+        }
 
         ctx.writeAndFlush("OK\n");
     }
