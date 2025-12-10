@@ -45,7 +45,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
             return;
         }
 
-        if ("DELETE".equalsIgnoreCase(command)) {
+        if ("DEL".equalsIgnoreCase(command)) {
             deleteHandler.handle(ctx, msg);
             return;
         }
