@@ -12,36 +12,42 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private final PingPongHandler pingPongHandler;
     private final SetHandler setHandler;
     private final GetHandler getHandler;
+    private final DeleteHandler deleteHandler;
 
-    public CommandHandler(PingPongHandler pingPongHandler, SetHandler setHandler, GetHandler getHandler) {
+    public CommandHandler(final PingPongHandler pingPongHandler, final SetHandler setHandler, final GetHandler getHandler, final DeleteHandler deleteHandler) {
         this.pingPongHandler = pingPongHandler;
         this.setHandler = setHandler;
         this.getHandler = getHandler;
+        this.deleteHandler = deleteHandler;
     }
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
-        final String trimmedMsg = msg.trim();
+        final String command = msg.trim().split("\\s+")[0];
 
-        if (trimmedMsg.isBlank()) {
+        if (command.isBlank()) {
             ctx.writeAndFlush("비어있습니다.\n");
             return;
         }
 
-        if ("PING".equalsIgnoreCase(trimmedMsg)) {
-            pingPongHandler.handle(ctx, trimmedMsg);
-            return;
+        switch (command) {
+            case "PING":
+                pingPongHandler.handle(ctx, command);
+                return;
+
+            case "SET":
+                setHandler.handle(ctx, msg);
+                return;
+
+            case "GET":
+                getHandler.handle(ctx, msg);
+                return;
+
+            case "DEL":
+                deleteHandler.handle(ctx, msg);
+                return;
         }
 
-        if ("SET".equalsIgnoreCase(trimmedMsg.split("\\s+")[0])) {
-            setHandler.handle(ctx, msg);
-            return;
-        }
-
-        if ("GET".equalsIgnoreCase(trimmedMsg.split("\\s+")[0])) {
-            getHandler.handle(ctx, msg);
-            return;
-        }
         ctx.writeAndFlush("Unknown command: " + msg + "\n");
     }
 
