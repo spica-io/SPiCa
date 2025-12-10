@@ -14,11 +14,12 @@ public class SetHandler {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String msg) {
+    void setIfAbsent(final ChannelHandlerContext ctx, final String msg) {
         log.info("Received: '%s'".formatted(msg));
         final String[] input = msg.trim().split("\\s+");
+
         if (input.length != 3) {
-            ctx.writeAndFlush("파라미터 개수는 3개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
+            ctx.writeAndFlush("SET시 파라미터 개수는 3개 또는 5개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
             return;
         }
         final String command = input[0];
@@ -29,6 +30,21 @@ public class SetHandler {
             ctx.writeAndFlush("중복 key: " + key + "\n");
             return;
         }
+        ctx.writeAndFlush("OK\n");
+    }
+
+    void setIfMatches(final ChannelHandlerContext ctx, final String msg) {
+        log.info("Received: '%s'".formatted(msg));
+        final String[] input = msg.trim().split("\\s+");
+
+        final String command = input[0];
+        final String key = input[1];
+        final String newValue = input[2];
+        final String oldValue = input[4];
+
+        final String currentOldValue = store.getOrDefault(key, null);
+
+        store.putIfAbsent(key, newValue);
         ctx.writeAndFlush("OK\n");
     }
 }
