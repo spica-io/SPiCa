@@ -30,24 +30,22 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
             return;
         }
 
-        if ("PING".equalsIgnoreCase(command)) {
-            pingPongHandler.handle(ctx, command);
-            return;
-        }
+        switch (command) {
+            case "PING":
+                pingPongHandler.handle(ctx, command);
+                return;
 
-        if ("SET".equalsIgnoreCase(command)) {
-            setHandler.handle(ctx, msg);
-            return;
-        }
+            case "SET":
+                setHandler.handle(ctx, msg);
+                return;
 
-        if ("GET".equalsIgnoreCase(command)) {
-            getHandler.handle(ctx, msg);
-            return;
-        }
+            case "GET":
+                getHandler.handle(ctx, msg);
+                return;
 
-        if ("DEL".equalsIgnoreCase(command)) {
-            deleteHandler.handle(ctx, msg);
-            return;
+            case "DEL":
+                deleteHandler.handle(ctx, msg);
+                return;
         }
 
         ctx.writeAndFlush("Unknown command: " + msg + "\n");
