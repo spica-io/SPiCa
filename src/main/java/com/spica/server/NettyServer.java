@@ -1,9 +1,6 @@
 package com.spica.server;
 
-import com.spica.handler.CommandHandler;
-import com.spica.handler.GetHandler;
-import com.spica.handler.PingPongHandler;
-import com.spica.handler.SetHandler;
+import com.spica.handler.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -29,7 +26,8 @@ public class NettyServer implements Server {
     private final PingPongHandler pingPongHandler = new PingPongHandler();
     private final SetHandler setHandler = new SetHandler(store);
     private final GetHandler getHandler = new GetHandler(store);
-    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, setHandler, getHandler);
+    private final DeleteHandler deleteHandler = new DeleteHandler(store);
+    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, setHandler, getHandler, deleteHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
