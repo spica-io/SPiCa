@@ -24,7 +24,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
         final String trimmedMsg = msg.trim();
 
         if (trimmedMsg.isBlank()) {
-            ctx.writeAndFlush("비어있습니다.");
+            ctx.writeAndFlush("비어있습니다.\n");
             return;
         }
 

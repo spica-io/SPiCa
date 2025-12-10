@@ -22,6 +22,6 @@ public class GetHandler {
         final String key = input[1];
         final String value = store.getOrDefault(key, null);
 
-        ctx.writeAndFlush("value: " + value);
+        ctx.writeAndFlush("value: " + value + "\n");
     }
 }
