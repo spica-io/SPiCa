@@ -1,0 +1,6 @@
+code_review:
+  pull_request_opened:
+    summary: true        # PR 요약 자동 게시
+    code_review: true    # 코드 리뷰 코멘트 자동 게시
+    help: false          # 도움말 메시지 게시 여부
+    include_drafts: true # 드래프트 PR에도 적용
