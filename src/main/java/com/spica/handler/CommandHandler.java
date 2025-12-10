@@ -6,6 +6,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
+
 @ChannelHandler.Sharable
 public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
@@ -36,7 +38,12 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
                 return;
 
             case "SET":
-                setHandler.handle(ctx, msg);
+                final String[] input = msg.trim().split("\\s+");
+                if (input.length == 5 && msg.trim().split("\\s+")[3].equalsIgnoreCase("MATCH")) {
+                    setHandler.setIfMatches(ctx, msg);
+                    return;
+                }
+                setHandler.setIfAbsent(ctx, msg);
                 return;
 
             case "GET":
