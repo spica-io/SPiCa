@@ -44,6 +44,14 @@ public class SetHandler {
 
         final String currentOldValue = store.getOrDefault(key, null);
 
+        if (currentOldValue == null) {
+            ctx.writeAndFlush("존재하지 않는 key: " + key + "\n");
+            return;
+        }
+        if (!currentOldValue.equals(oldValue)) {
+            ctx.writeAndFlush("올바르지 않은 이전 값: " + oldValue + "\n");
+            return;
+        }
         store.putIfAbsent(key, newValue);
         ctx.writeAndFlush("OK\n");
     }
