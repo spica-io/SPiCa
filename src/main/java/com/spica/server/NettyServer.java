@@ -1,5 +1,6 @@
 package com.spica.server;
 
+import com.spica.handler.CommandHandler;
 import com.spica.handler.PingPongHandler;
 import com.spica.handler.SetHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -24,6 +25,9 @@ public class NettyServer implements Server {
     private final ServerConfiguration config;
     private final Map<String, String> store = new ConcurrentHashMap<>();
 
+    private final PingPongHandler pingPongHandler = new PingPongHandler();
+    private final SetHandler setHandler = new SetHandler(store);
+    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, setHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
@@ -46,8 +50,7 @@ public class NettyServer implements Server {
                         ch.pipeline().addLast(new LineBasedFrameDecoder(config.maxFrameLength()));
                         ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
                         ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-//                        ch.pipeline().addLast(new PingPongHandler());
-                        ch.pipeline().addLast(new SetHandler(store));
+                        ch.pipeline().addLast(commandHandler);
                     }
                 });
 
