@@ -27,7 +27,7 @@ public class NettyServer implements Server {
 
     private final PingPongHandler pingPongHandler = new PingPongHandler();
     private final SetHandler setHandler = new SetHandler(store);
-
+    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, setHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
@@ -50,7 +50,7 @@ public class NettyServer implements Server {
                         ch.pipeline().addLast(new LineBasedFrameDecoder(config.maxFrameLength()));
                         ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
                         ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
-                        ch.pipeline().addLast(new CommandHandler(pingPongHandler, setHandler));
+                        ch.pipeline().addLast(commandHandler);
                     }
                 });
 
