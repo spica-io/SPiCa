@@ -18,9 +18,19 @@ public class GetHandler {
         log.info("Received: '/s'".formatted(msg));
         final String[] input = msg.trim().split("\\s+");
 
+        if (input.length != 2) {
+            ctx.writeAndFlush("파라미터는 2개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
+            return;
+        }
+
         final String command = input[0];
         final String key = input[1];
         final String value = store.getOrDefault(key, null);
+
+        if (value == null) {
+            ctx.writeAndFlush("존재하지 않는 key입니다. 입력된 key: " + key + "\n");
+            return;
+        }
 
         ctx.writeAndFlush("value: " + value + "\n");
     }
