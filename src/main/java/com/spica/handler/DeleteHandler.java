@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class DeleteHandler {
-    private static final Logger log = LoggerFactory.getLogger(SetHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(DeleteHandler.class);
     private final Map<String, String> store;
 
     public DeleteHandler(Map<String, String> store) {
