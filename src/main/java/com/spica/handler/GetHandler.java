@@ -15,6 +15,13 @@ public class GetHandler {
     }
 
     void handle(final ChannelHandlerContext ctx, final String msg){
+        log.info("Received: '/s'".formatted(msg));
+        final String[] input = msg.trim().split("\\s+");
 
+        final String command = input[0];
+        final String key = input[1];
+        final String value = store.getOrDefault(key, null);
+
+        ctx.writeAndFlush("value: " + value);
     }
 }
