@@ -19,12 +19,18 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
         final String trimmedMsg = msg.trim();
+
+        if (trimmedMsg.isBlank()) {
+            ctx.writeAndFlush("비어있습니다.");
+            return;
+        }
+
         if ("PING".equalsIgnoreCase(trimmedMsg)) {
             pingPongHandler.handle(ctx, trimmedMsg);
             return;
         }
 
-        if (!trimmedMsg.isBlank() && "SET".equalsIgnoreCase(trimmedMsg.split("\\s+")[0])) {
+        if ("SET".equalsIgnoreCase(trimmedMsg.split("\\s+")[0])) {
             setHandler.handle(ctx, msg);
             return;
         }
