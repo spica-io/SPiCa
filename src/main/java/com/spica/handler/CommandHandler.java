@@ -17,12 +17,13 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
-        if ("PING".equalsIgnoreCase(msg)) {
-            pingPongHandler.handle(ctx, msg);
+        final String trimmedMsg = msg.trim();
+        if ("PING".equalsIgnoreCase(trimmedMsg)) {
+            pingPongHandler.handle(ctx, trimmedMsg);
             return;
         }
 
-        if ("SET".equalsIgnoreCase(msg.split("\\s+")[0])) {
+        if (!trimmedMsg.isBlank() && "SET".equalsIgnoreCase(trimmedMsg.split("\\s+")[0])) {
             setHandler.handle(ctx, msg);
             return;
         }
