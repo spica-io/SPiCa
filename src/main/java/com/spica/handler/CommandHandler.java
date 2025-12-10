@@ -25,7 +25,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
-        final String command = msg.trim().split("\\s+")[0];
+        final String command = msg.trim().split("\\s+")[0].toUpperCase(Locale.ROOT);
 
         if (command.isBlank()) {
             ctx.writeAndFlush("비어있습니다.\n");
