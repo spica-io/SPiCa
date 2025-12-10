@@ -23,6 +23,6 @@ public class DeleteHandler {
 
         store.remove(key);
 
-        ctx.writeAndFlush("OK");
+        ctx.writeAndFlush("OK\n");
     }
 }
