@@ -15,7 +15,7 @@ public class GetHandler {
     }
 
     void handle(final ChannelHandlerContext ctx, final String msg){
-        log.info("Received: '/s'".formatted(msg));
+        log.info("Received: '%s'".formatted(msg));
         final String[] input = msg.trim().split("\\s+");
 
         if (input.length != 2) {
