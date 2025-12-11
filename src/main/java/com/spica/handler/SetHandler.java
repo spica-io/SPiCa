@@ -52,7 +52,7 @@ public class SetHandler {
             ctx.writeAndFlush("올바르지 않은 이전 값: " + oldValue + "\n");
             return;
         }
-        store.put(key, newValue);
+        store.replace(key, newValue);
         ctx.writeAndFlush("OK\n");
     }
 }
