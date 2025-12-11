@@ -28,6 +28,8 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
         final String[] input = msg.trim().split("\\s+");
         final String command = input[0].toUpperCase(Locale.ROOT);
 
+        log.info("Received: '%s'".formatted(msg));
+
         if (command.isBlank()) {
             ctx.writeAndFlush("비어있습니다.\n");
             return;
