@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit;
 
 public class SleepHandler {
 
-    public void handle(final String[] input) throws InterruptedException {
+    void handle(final String[] input) throws InterruptedException {
         final long time = Long.parseLong(input[1]);
         Thread.sleep(Duration.of(time, ChronoUnit.SECONDS));
     }
