@@ -1,7 +1,9 @@
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/b83d1e02-269b-4e15-8054-80e606d3516b" />
+
 # SPiCa Server
 
-이 프로젝트는 **Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store**로, <br/>
-클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET` 명령어를 사용할 수 있습니다.
+SPiCa는 **Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store Server**입니다. <br/>
+클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET`.. 명령어를 사용할 수 있습니다.
 
 ## Features
 
