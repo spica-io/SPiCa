@@ -28,7 +28,8 @@ public class NettyServer implements Server {
     private final SetHandler setHandler = new SetHandler(store);
     private final GetHandler getHandler = new GetHandler(store);
     private final DeleteHandler deleteHandler = new DeleteHandler(store);
-    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, sleepHandler, setHandler, getHandler, deleteHandler);
+    private final MultiGetHandler multiGetHandler = new MultiGetHandler(store);
+    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, sleepHandler, setHandler, getHandler, multiGetHandler, deleteHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
