@@ -16,12 +16,14 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private final SetHandler setHandler;
     private final GetHandler getHandler;
     private final DeleteHandler deleteHandler;
+    private final MultiGetHandler multiGetHandler;
 
-    public CommandHandler(final PingPongHandler pingPongHandler, final SleepHandler sleepHandler, final SetHandler setHandler, final GetHandler getHandler, final DeleteHandler deleteHandler) {
+    public CommandHandler(final PingPongHandler pingPongHandler, final SleepHandler sleepHandler, final SetHandler setHandler, final GetHandler getHandler, final MultiGetHandler multiGetHandler, final DeleteHandler deleteHandler) {
         this.pingPongHandler = pingPongHandler;
         this.sleepHandler = sleepHandler;
         this.setHandler = setHandler;
         this.getHandler = getHandler;
+        this.multiGetHandler = multiGetHandler;
         this.deleteHandler = deleteHandler;
     }
 
@@ -64,6 +66,13 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
                     return;
                 }
                 ctx.writeAndFlush("GET 명령어 구문이 올바르지 않습니다. 사용법: GET <key>\n");
+                return;
+            case "MGET":
+                if (input.length < 2) {
+                    ctx.writeAndFlush("MGET 명령어 구문이 올바르지 않습니다. 사용법: GET <key> <key> ...\n");
+                    return;
+                }
+                multiGetHandler.handle(ctx, input);
                 return;
 
             case "DEL":
