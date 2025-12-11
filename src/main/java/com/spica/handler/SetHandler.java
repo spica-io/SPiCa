@@ -14,13 +14,8 @@ public class SetHandler {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String msg) {
-        log.info("Received: '%s'".formatted(msg));
-        final String[] input = msg.trim().split("\\s+");
-        if (input.length != 3) {
-            ctx.writeAndFlush("파라미터 개수는 3개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
-            return;
-        }
+    void setIfAbsent(final ChannelHandlerContext ctx, final String[] input) {
+
         final String command = input[0];
         final String key = input[1];
         final String value = input[2];
@@ -30,5 +25,23 @@ public class SetHandler {
             return;
         }
         ctx.writeAndFlush("OK\n");
+    }
+
+    void setIfMatches(final ChannelHandlerContext ctx, final String[] input) {
+        final String command = input[0];
+        final String key = input[1];
+        final String newValue = input[2];
+        final String oldValue = input[4];
+
+        if (store.replace(key, oldValue, newValue)){
+            ctx.writeAndFlush("OK\n");
+        } else {
+            final String currentValue = store.getOrDefault(key, null);
+            if (currentValue == null) {
+                ctx.writeAndFlush("존재하지 않는 key: " + key + "\n");
+            } else {
+                ctx.writeAndFlush("올바르지 않은 이전 값: " + oldValue + "\n");
+            }
+        }
     }
 }

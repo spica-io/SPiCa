@@ -6,6 +6,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
+
 @ChannelHandler.Sharable
 public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
@@ -23,7 +25,10 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
-        final String command = msg.trim().split("\\s+")[0];
+        final String[] input = msg.trim().split("\\s+");
+        final String command = input[0].toUpperCase(Locale.ROOT);
+
+        log.info("Received: '%s'".formatted(msg));
 
         if (command.isBlank()) {
             ctx.writeAndFlush("비어있습니다.\n");
@@ -32,19 +37,35 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
         switch (command) {
             case "PING":
-                pingPongHandler.handle(ctx, command);
+                pingPongHandler.handle(ctx);
                 return;
 
             case "SET":
-                setHandler.handle(ctx, msg);
+                if (input.length == 3) {
+                    setHandler.setIfAbsent(ctx, input);
+                    return;
+                }
+                if (input.length == 5 && input[3].equalsIgnoreCase("MATCH")) {
+                    setHandler.setIfMatches(ctx, input);
+                    return;
+                }
+                ctx.writeAndFlush("SET 명령어 구문이 올바르지 않습니다. 사용법: SET <key> <value> 또는 SET <key> <newValue> MATCH <oldValue>\n");
                 return;
 
             case "GET":
-                getHandler.handle(ctx, msg);
+                if (input.length == 2) {
+                    getHandler.handle(ctx, input);
+                    return;
+                }
+                ctx.writeAndFlush("GET 명령어 구문이 올바르지 않습니다. 사용법: GET <key>\n");
                 return;
 
             case "DEL":
-                deleteHandler.handle(ctx, msg);
+                if (input.length == 2) {
+                    deleteHandler.handle(ctx, input);
+                    return;
+                }
+                ctx.writeAndFlush("DEL 명령어 구문이 올바르지 않습니다. 사용법: DEL <key>\n");
                 return;
         }
 

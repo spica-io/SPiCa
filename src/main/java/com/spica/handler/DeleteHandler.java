@@ -14,14 +14,7 @@ public class DeleteHandler {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String msg){
-        log.info("Received: '%s'".formatted(msg));
-        final String input[] = msg.trim().split("\\s+");
-
-        if (input.length != 2) {
-            ctx.writeAndFlush("파라미터는 2개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
-            return;
-        }
+    void handle(final ChannelHandlerContext ctx, final String[] input){
 
         final String command = input[0];
         final String key = input[1];
