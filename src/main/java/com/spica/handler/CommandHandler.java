@@ -41,19 +41,31 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
                 return;
 
             case "SET":
+                if (input.length == 3) {
+                    setHandler.setIfAbsent(ctx, input);
+                    return;
+                }
                 if (input.length == 5 && input[3].equalsIgnoreCase("MATCH")) {
                     setHandler.setIfMatches(ctx, input);
                     return;
                 }
-                setHandler.setIfAbsent(ctx, input);
+                ctx.writeAndFlush("SET 명령어 구문이 올바르지 않습니다. 사용법: SET <key> <value> 또는 SET <key> <newValue> MATCH <oldValue>\n");
                 return;
 
             case "GET":
-                getHandler.handle(ctx, input);
+                if (input.length == 2) {
+                    getHandler.handle(ctx, input);
+                    return;
+                }
+                ctx.writeAndFlush("GET 명령어 구문이 올바르지 않습니다. 사용법: GET <key>\n");
                 return;
 
             case "DEL":
-                deleteHandler.handle(ctx, input);
+                if (input.length == 2) {
+                    deleteHandler.handle(ctx, input);
+                    return;
+                }
+                ctx.writeAndFlush("DEL 명령어 구문이 올바르지 않습니다. 사용법: DEL <key>\n");
                 return;
         }
 

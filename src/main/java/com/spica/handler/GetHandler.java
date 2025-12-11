@@ -16,11 +16,6 @@ public class GetHandler {
 
     void handle(final ChannelHandlerContext ctx, final String[] input){
 
-        if (input.length != 2) {
-            ctx.writeAndFlush("파라미터는 2개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
-            return;
-        }
-
         final String command = input[0];
         final String key = input[1];
         final String value = store.getOrDefault(key, null);

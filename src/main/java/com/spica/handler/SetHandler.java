@@ -16,10 +16,6 @@ public class SetHandler {
 
     void setIfAbsent(final ChannelHandlerContext ctx, final String[] input) {
 
-        if (input.length != 3) {
-            ctx.writeAndFlush("SET시 파라미터 개수는 3개 또는 5개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
-            return;
-        }
         final String command = input[0];
         final String key = input[1];
         final String value = input[2];
