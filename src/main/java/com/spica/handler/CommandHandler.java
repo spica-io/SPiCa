@@ -39,7 +39,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
             case "SET":
                 final String[] input = msg.trim().split("\\s+");
-                if (input.length == 5 && msg.trim().split("\\s+")[3].equalsIgnoreCase("MATCH")) {
+                if (input.length == 5 && input[3].equalsIgnoreCase("MATCH")) {
                     setHandler.setIfMatches(ctx, msg);
                     return;
                 }
