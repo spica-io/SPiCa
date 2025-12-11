@@ -24,10 +24,11 @@ public class NettyServer implements Server {
     private final Map<String, String> store = new ConcurrentHashMap<>();
 
     private final PingPongHandler pingPongHandler = new PingPongHandler();
+    private final SleepHandler sleepHandler = new SleepHandler();
     private final SetHandler setHandler = new SetHandler(store);
     private final GetHandler getHandler = new GetHandler(store);
     private final DeleteHandler deleteHandler = new DeleteHandler(store);
-    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, setHandler, getHandler, deleteHandler);
+    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, sleepHandler, setHandler, getHandler, deleteHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
