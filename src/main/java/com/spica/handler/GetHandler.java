@@ -14,8 +14,7 @@ public class GetHandler {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String msg){
-        final String[] input = msg.trim().split("\\s+");
+    void handle(final ChannelHandlerContext ctx, final String[] input){
 
         if (input.length != 2) {
             ctx.writeAndFlush("파라미터는 2개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");

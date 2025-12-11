@@ -42,18 +42,18 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
             case "SET":
                 if (input.length == 5 && input[3].equalsIgnoreCase("MATCH")) {
-                    setHandler.setIfMatches(ctx, msg);
+                    setHandler.setIfMatches(ctx, input);
                     return;
                 }
-                setHandler.setIfAbsent(ctx, msg);
+                setHandler.setIfAbsent(ctx, input);
                 return;
 
             case "GET":
-                getHandler.handle(ctx, msg);
+                getHandler.handle(ctx, input);
                 return;
 
             case "DEL":
-                deleteHandler.handle(ctx, msg);
+                deleteHandler.handle(ctx, input);
                 return;
         }
 

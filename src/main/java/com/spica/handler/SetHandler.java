@@ -14,8 +14,7 @@ public class SetHandler {
         this.store = store;
     }
 
-    void setIfAbsent(final ChannelHandlerContext ctx, final String msg) {
-        final String[] input = msg.trim().split("\\s+");
+    void setIfAbsent(final ChannelHandlerContext ctx, final String[] input) {
 
         if (input.length != 3) {
             ctx.writeAndFlush("SET시 파라미터 개수는 3개 또는 5개여야 합니다. 입력된 파라미터 수: " + input.length + "\n");
@@ -32,8 +31,7 @@ public class SetHandler {
         ctx.writeAndFlush("OK\n");
     }
 
-    void setIfMatches(final ChannelHandlerContext ctx, final String msg) {
-        final String[] input = msg.trim().split("\\s+");
+    void setIfMatches(final ChannelHandlerContext ctx, final String[] input) {
 
         final String command = input[0];
         final String key = input[1];
