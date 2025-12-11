@@ -69,7 +69,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
                 return;
             case "MGET":
                 if (input.length < 2) {
-                    ctx.writeAndFlush("MGET 명령어 구문이 올바르지 않습니다. 사용법: GET <key> <key> ...\n");
+                    ctx.writeAndFlush("MGET 명령어 구문이 올바르지 않습니다. 사용법: MGET <key> <key> ...\n");
                     return;
                 }
                 multiGetHandler.handle(ctx, input);
