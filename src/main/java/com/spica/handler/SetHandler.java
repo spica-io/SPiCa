@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class SetHandler {
-    private static final Logger log = LoggerFactory.getLogger(SetHandler.class);
     private final Map<String, String> store;
 
     public SetHandler(final Map<String, String> store) {
