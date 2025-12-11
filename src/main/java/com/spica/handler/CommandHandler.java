@@ -37,7 +37,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
 
         switch (command) {
             case "PING":
-                pingPongHandler.handle(ctx, command);
+                pingPongHandler.handle(ctx);
                 return;
 
             case "SET":
