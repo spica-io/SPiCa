@@ -2,8 +2,8 @@ package com.spica.handler;
 
 public class SleepHandler {
 
-    public void handle(final String msg) throws InterruptedException {
-        final long time = Long.parseLong(msg);
+    public void handle(final String[] input) throws InterruptedException {
+        final long time = Long.parseLong(input[1]);
         Thread.sleep(time * 1000);
     }
 }
