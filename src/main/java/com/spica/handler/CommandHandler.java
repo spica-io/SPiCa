@@ -12,12 +12,14 @@ import java.util.Locale;
 public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
     private final PingPongHandler pingPongHandler;
+    private final SleepHandler sleepHandler;
     private final SetHandler setHandler;
     private final GetHandler getHandler;
     private final DeleteHandler deleteHandler;
 
-    public CommandHandler(final PingPongHandler pingPongHandler, final SetHandler setHandler, final GetHandler getHandler, final DeleteHandler deleteHandler) {
+    public CommandHandler(final PingPongHandler pingPongHandler, final SleepHandler sleepHandler, final SetHandler setHandler, final GetHandler getHandler, final DeleteHandler deleteHandler) {
         this.pingPongHandler = pingPongHandler;
+        this.sleepHandler = sleepHandler;
         this.setHandler = setHandler;
         this.getHandler = getHandler;
         this.deleteHandler = deleteHandler;
@@ -38,6 +40,10 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
         switch (command) {
             case "PING":
                 pingPongHandler.handle(ctx);
+                return;
+
+            case "SLEEP":
+                sleepHandler.handle(input);
                 return;
 
             case "SET":
