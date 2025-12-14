@@ -1,16 +1,21 @@
 package com.spica.handler;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 
+import static com.spica.handler.Responses.*;
+
 @ChannelHandler.Sharable
-public class CommandHandler extends SimpleChannelInboundHandler<String> {
+public final class CommandHandler extends SimpleChannelInboundHandler<ByteBuf> {
+
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
     private final ExecutorService slowPathExecutor;
     private final PingPongHandler pingPongHandler;
@@ -20,7 +25,14 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private final DeleteHandler deleteHandler;
     private final MultiGetHandler multiGetHandler;
 
-    public CommandHandler(final ExecutorService slowPathExecutor, final PingPongHandler pingPongHandler, final SleepHandler sleepHandler, final SetHandler setHandler, final GetHandler getHandler, final MultiGetHandler multiGetHandler, final DeleteHandler deleteHandler) {
+    public CommandHandler(
+            final ExecutorService slowPathExecutor,
+            final PingPongHandler pingPongHandler,
+            final SleepHandler sleepHandler,
+            final SetHandler setHandler,
+            final GetHandler getHandler,
+            final MultiGetHandler multiGetHandler,
+            final DeleteHandler deleteHandler) {
         this.slowPathExecutor = slowPathExecutor;
         this.pingPongHandler = pingPongHandler;
         this.sleepHandler = sleepHandler;
@@ -31,75 +43,107 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     }
 
     @Override
-    protected void channelRead0(final ChannelHandlerContext ctx, final String msg) throws Exception {
-        final String[] input = msg.trim().split("\\s+");
-        final String command = input[0].toUpperCase(Locale.ROOT);
+    protected void channelRead0(final ChannelHandlerContext ctx, final ByteBuf msg) throws Exception {
+        final String input = parseInput(msg);
 
-        log.info("Received: '%s'".formatted(msg));
-
-        if (command.isBlank()) {
-            ctx.writeAndFlush("비어있습니다.\n");
+        if (input.isEmpty()) {
+            send(ctx, EMPTY_INPUT);
             return;
         }
 
-        switch (command) {
-            case "PING":
-                pingPongHandler.handle(ctx);
-                return;
+        logIfDebug(input);
 
-            case "SLEEP":
-                handleSlow(ctx, input);
-                return;
+        final String command = extractCommand(input);
 
-            case "SET":
-                if (input.length == 3) {
-                    setHandler.setIfAbsent(ctx, input);
-                    return;
-                }
-                if (input.length == 5 && input[3].equalsIgnoreCase("MATCH")) {
-                    setHandler.setIfMatches(ctx, input);
-                    return;
-                }
-                ctx.writeAndFlush("SET 명령어 구문이 올바르지 않습니다. 사용법: SET <key> <value> 또는 SET <key> <newValue> MATCH <oldValue>\n");
-                return;
-
-            case "GET":
-                if (input.length == 2) {
-                    getHandler.handle(ctx, input);
-                    return;
-                }
-                ctx.writeAndFlush("GET 명령어 구문이 올바르지 않습니다. 사용법: GET <key>\n");
-                return;
-            case "MGET":
-                if (input.length < 2) {
-                    ctx.writeAndFlush("MGET 명령어 구문이 올바르지 않습니다. 사용법: MGET <key> <key> ...\n");
-                    return;
-                }
-                multiGetHandler.handle(ctx, input);
-                return;
-
-            case "DEL":
-                if (input.length == 2) {
-                    deleteHandler.handle(ctx, input);
-                    return;
-                }
-                ctx.writeAndFlush("DEL 명령어 구문이 올바르지 않습니다. 사용법: DEL <key>\n");
-                return;
-        }
-
-        ctx.writeAndFlush("Unknown command: " + msg + "\n");
+        dispatch(ctx, command, input);
     }
 
-    private void handleSlow(ChannelHandlerContext ctx, String[] input) {
-        slowPathExecutor.submit(() -> {
-            try {
-                sleepHandler.handle(input);
-                ctx.writeAndFlush("OK\n");
-            } catch (Exception e) {
-                log.error("Error executing slow command '{}'", input[0], e);
-                ctx.writeAndFlush("ERROR: An internal error occurred while processing the command.\n");
-            }
-        });
+    private void dispatch(final ChannelHandlerContext ctx, final String command, final String input) {
+        switch (command) {
+            case "PING" -> pong(ctx);
+            case "SLEEP" -> handleSleep(ctx, input);
+            case "SET" -> handleSet(ctx, input);
+            case "GET" -> handleGet(ctx, input);
+            case "MGET" -> handleMget(ctx, input);
+            case "DEL" -> handleDel(ctx, input);
+            default -> send(ctx, "Unknown command: " + extractFirstWord(input) + "\n");
+        }
+    }
+
+    private void handleSleep(final ChannelHandlerContext ctx, final String input) {
+       slowPathExecutor.submit(() -> {
+           try {
+               final String[] args = input.split("\\s+");
+               sleepHandler.handle(args);
+               send(ctx, "OK");
+           } catch (final Exception e) {
+               send(ctx, "ERROR: An internal error occurred while processing the command.\n");
+           }
+       });
+    }
+
+    private void handleSet(final ChannelHandlerContext ctx, final String input) {
+        final String[] args = input.split("\\s+");
+        if (args.length == 3) {
+            setHandler.setIfAbsent(ctx, args);
+        } else if (args.length == 5 && args[3].equalsIgnoreCase("MATCH")) {
+            setHandler.setIfMatches(ctx, args);
+        } else {
+            send(ctx, SET_USAGE);
+        }
+    }
+
+    private void handleGet(final ChannelHandlerContext ctx, final String input) {
+        final String[] args = input.split("\\s+");
+        if (args.length == 2) {
+            getHandler.handle(ctx, args);
+        } else {
+            send(ctx, GET_USAGE);
+        }
+    }
+
+    private void handleMget(final ChannelHandlerContext ctx, final String input) {
+        final String[] args = input.split("\\s+");
+        if (args.length >= 2) {
+            multiGetHandler.handle(ctx, args);
+        } else {
+            send(ctx, MGET_USAGE);
+        }
+    }
+
+    private void handleDel(final ChannelHandlerContext ctx, final String input) {
+        final String[] args = input.split("\\s+");
+        if (args.length == 2) {
+            deleteHandler.handle(ctx, args);
+        } else {
+            send(ctx, DEL_USAGE);
+        }
+    }
+
+    // ===== 유틸리티 메서드 =====
+
+    private String parseInput(final ByteBuf msg) {
+        if (msg.readableBytes() == 0) {
+            return "";
+        }
+        return msg.toString(CharsetUtil.UTF_8).trim();
+    }
+
+    private String extractCommand(final String input) {
+        final int spaceIdx = input.indexOf(' ');
+        final String raw = (spaceIdx == -1) ? input : input.substring(0, spaceIdx);
+        return raw.toUpperCase(Locale.ROOT);
+    }
+
+    private String extractFirstWord(final String input) {
+        final int spaceIdx = input.indexOf(' ');
+        return (spaceIdx == -1) ? input : input.substring(0, spaceIdx);
+    }
+
+    private void logIfDebug(final String input) {
+        if (log.isDebugEnabled()) {
+            log.debug("Received: '{}'", input);
+        }
     }
 
     @Override

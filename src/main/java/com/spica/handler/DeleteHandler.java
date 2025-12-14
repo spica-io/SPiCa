@@ -1,28 +1,27 @@
 package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-public class DeleteHandler {
-    private final Map<String, String> store;
+import static com.spica.handler.Responses.*;
 
-    public DeleteHandler(Map<String, String> store) {
+public final class DeleteHandler {
+
+    private final Map<String, byte[]> store;
+
+    public DeleteHandler(final Map<String, byte[]> store) {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String[] input){
-
-        final String command = input[0];
-        final String key = input[1];
+    void handle(final ChannelHandlerContext ctx, final String[] args) {
+        final String key = args[1];
 
         if (store.remove(key) == null) {
-            ctx.writeAndFlush("존재하지 않는 key입니다.\n");
+            keyNotFound(ctx);
             return;
         }
 
-        ctx.writeAndFlush("OK\n");
+        ok(ctx);
     }
 }

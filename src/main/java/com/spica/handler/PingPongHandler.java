@@ -1,11 +1,10 @@
 package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class PingPongHandler {
+public final class PingPongHandler {
+
     void handle(final ChannelHandlerContext ctx) {
-        ctx.writeAndFlush("Pong\n");
+        // CommandHandler에서 Responses.pong() 직접 호출
     }
 }

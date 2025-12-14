@@ -1,29 +1,30 @@
 package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.netty.util.CharsetUtil;
 
 import java.util.Map;
 
-public class GetHandler {
-    private final Map<String, String> store;
+import static com.spica.handler.Responses.*;
 
-    public GetHandler(Map<String, String> store) {
+public final class GetHandler {
+
+    private final Map<String, byte[]> store;
+
+    public GetHandler(final Map<String, byte[]> store) {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String[] input){
+    void handle(final ChannelHandlerContext ctx, final String[] args) {
+        final String key = args[1];
+        final byte[] valueBytes = store.get(key);
 
-        final String command = input[0];
-        final String key = input[1];
-        final String value = store.getOrDefault(key, null);
-
-        if (value == null) {
-            ctx.writeAndFlush("존재하지 않는 key입니다. 입력된 key: " + key + "\n");
+        if (valueBytes == null) {
+            send(ctx, "존재하지 않는 key입니다. 입력된 key: " + key + "\n");
             return;
         }
 
-        ctx.writeAndFlush("value: " + value + "\n");
+        final String value = new String(valueBytes, CharsetUtil.UTF_8);
+        send(ctx, "value: " + value + "\n");
     }
 }
