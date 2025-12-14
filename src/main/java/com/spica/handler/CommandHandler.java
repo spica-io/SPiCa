@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 
 @ChannelHandler.Sharable
 public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
+    private final ExecutorService slowPathExecutor;
     private final PingPongHandler pingPongHandler;
     private final SleepHandler sleepHandler;
     private final SetHandler setHandler;
@@ -18,7 +20,8 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
     private final DeleteHandler deleteHandler;
     private final MultiGetHandler multiGetHandler;
 
-    public CommandHandler(final PingPongHandler pingPongHandler, final SleepHandler sleepHandler, final SetHandler setHandler, final GetHandler getHandler, final MultiGetHandler multiGetHandler, final DeleteHandler deleteHandler) {
+    public CommandHandler(final ExecutorService slowPathExecutor, final PingPongHandler pingPongHandler, final SleepHandler sleepHandler, final SetHandler setHandler, final GetHandler getHandler, final MultiGetHandler multiGetHandler, final DeleteHandler deleteHandler) {
+        this.slowPathExecutor = slowPathExecutor;
         this.pingPongHandler = pingPongHandler;
         this.sleepHandler = sleepHandler;
         this.setHandler = setHandler;
@@ -45,7 +48,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
                 return;
 
             case "SLEEP":
-                sleepHandler.handle(input);
+                handleSlow(ctx, input);
                 return;
 
             case "SET":
@@ -85,6 +88,17 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
         }
 
         ctx.writeAndFlush("Unknown command: " + msg + "\n");
+    }
+
+    private void handleSlow(ChannelHandlerContext ctx, String[] input) {
+        slowPathExecutor.submit(() -> {
+            try {
+                sleepHandler.handle(input);
+                ctx.writeAndFlush("OK\n");
+            } catch (Exception e) {
+                ctx.writeAndFlush("ERROR: " + e.getMessage() + "\n");
+            }
+        });
     }
 
     @Override

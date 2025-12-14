@@ -17,6 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class NettyServer implements Server {
     private static final Logger log = LoggerFactory.getLogger(NettyServer.class);
@@ -29,7 +32,8 @@ public class NettyServer implements Server {
     private final GetHandler getHandler = new GetHandler(store);
     private final DeleteHandler deleteHandler = new DeleteHandler(store);
     private final MultiGetHandler multiGetHandler = new MultiGetHandler(store);
-    private final CommandHandler commandHandler = new CommandHandler(pingPongHandler, sleepHandler, setHandler, getHandler, multiGetHandler, deleteHandler);
+    private final ExecutorService excutorService = Executors.newVirtualThreadPerTaskExecutor();
+    private final CommandHandler commandHandler = new CommandHandler(excutorService, pingPongHandler, sleepHandler, setHandler, getHandler, multiGetHandler, deleteHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
