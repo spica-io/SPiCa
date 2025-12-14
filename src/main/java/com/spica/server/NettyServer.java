@@ -32,8 +32,8 @@ public class NettyServer implements Server {
     private final GetHandler getHandler = new GetHandler(store);
     private final DeleteHandler deleteHandler = new DeleteHandler(store);
     private final MultiGetHandler multiGetHandler = new MultiGetHandler(store);
-    private final ExecutorService excutorService = Executors.newVirtualThreadPerTaskExecutor();
-    private final CommandHandler commandHandler = new CommandHandler(excutorService, pingPongHandler, sleepHandler, setHandler, getHandler, multiGetHandler, deleteHandler);
+    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+    private final CommandHandler commandHandler = new CommandHandler(executorService, pingPongHandler, sleepHandler, setHandler, getHandler, multiGetHandler, deleteHandler);
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
