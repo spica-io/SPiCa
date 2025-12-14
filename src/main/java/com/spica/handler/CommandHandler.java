@@ -61,7 +61,7 @@ public final class CommandHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private void dispatch(final ChannelHandlerContext ctx, final String command, final String input) {
         switch (command) {
             case "PING" -> pong(ctx);
-            case "SLEEP" -> handleSleep(input);
+            case "SLEEP" -> handleSleep(ctx, input);
             case "SET" -> handleSet(ctx, input);
             case "GET" -> handleGet(ctx, input);
             case "MGET" -> handleMget(ctx, input);
