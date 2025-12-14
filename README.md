@@ -2,15 +2,37 @@
 
 # SPiCa Server
 
-SPiCa는 **Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memory Key-Value Store Server**입니다. <br/>
-클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET`.. 명령어를 사용할 수 있습니다.
+SPiCa는 **Netty** 프레임워크를 사용하여 구현된 고성능 **In-Memory Key-Value Store Server**입니다. <br/>
+클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET`, `DEL`, `MGET` 명령어를 사용할 수 있습니다.
 
 ## Features
 
-*   **PING**: 서버 상태 확인 (`PONG` 응답)
+*   **PING**: 서버 상태 확인 (`Pong` 응답)
 *   **SET**: 키-값 저장 (`SET key value`)
+*   **SET MATCH**: 조건부 저장 (`SET key newValue MATCH oldValue`)
 *   **GET**: 키로 값 조회 (`GET key`)
+*   **DEL**: 키 삭제 (`DEL key`)
+*   **MGET**: 여러 키 동시 조회 (`MGET key1 key2 ...`)
 *   **In-Memory Storage**: `ConcurrentHashMap`을 사용한 Thread-safe한 데이터 저장
+*   **Memory Optimization**: `byte[]` 저장소와 ByteBuf 풀링으로 메모리 효율 극대화
+
+## Performance
+
+### Benchmark Results
+
+| Command | Throughput | Latency (p50) | Latency (p99) |
+|---------|------------|---------------|---------------|
+| PING | 58,651 ops/sec | 0.063 ms | 0.144 ms |
+| SET | 51,881 ops/sec | 0.073 ms | 0.154 ms |
+| GET | 46,458 ops/sec | 0.074 ms | 0.211 ms |
+
+*테스트 환경: 4 threads × 10,000 ops, JIT Warm-up 3회, TCP_NODELAY 적용*
+
+### Optimization Techniques
+
+*   **Memory Locality**: `String` 대신 `byte[]` 저장으로 61% 메모리 절감
+*   **ByteBuf Pooling**: 상수 응답 재사용으로 Zero-Copy 전송
+*   **Lazy Split**: 필요한 명령어에서만 문자열 분리 수행
 
 ## Architecture (Component Specifications)
 
@@ -29,11 +51,17 @@ SPiCa는 **Netty** 프레임워크를 사용하여 구현된 간단한 **In-Memo
 
 * **Protocol Adaptation Layer (Inbound):**
     * `LineBasedFrameDecoder`: TCP의 스트림(Stream) 특성으로 인한 Packet Fragmentation/Coalescing 문제를 해결하기 위해, Delimiter(\n) 기반으로 바이트 스트림을 온전한 프레임으로 재조립합니다.
-    * `StringDecoder`: 조립된 바이너리 프레임(`ByteBuf`)을 애플리케이션 레벨 객체(`String`)로 변환(Decoding)합니다.
 * **Business Logic Layer:**
-    * `PingPongHandler` / `CommandHandler`: 디코딩된 메시지를 수신하여 비즈니스 로직(Command Parsing, State Management)을 수행합니다. 필요 시 `EventExecutorGroup`을 통해 블로킹 작업을 별도 스레드로 격리(Offloading)합니다.
-* **Transport Adaptation Layer (Outbound):**
-    * `StringEncoder`: 응답 객체를 네트워크 전송을 위한 직렬화된 바이트 스트림으로 변환합니다.
+    * `CommandHandler`: 명령어를 파싱하고 적절한 핸들러로 라우팅합니다.
+    * `SetHandler`, `GetHandler`, `DeleteHandler`, `MultiGetHandler`: 각 명령어별 비즈니스 로직을 수행합니다.
+* **Response Layer:**
+    * `Responses`: 상수 ByteBuf를 재사용하여 Zero-Copy 응답을 제공합니다.
+
+### Virtual Threads (Planned)
+Java 24의 Virtual Threads를 활용한 하이브리드 아키텍처를 계획 중입니다.
+
+* **Fast Path**: PING, GET, SET, DEL 등 빠른 명령어는 Netty Event Loop에서 직접 처리
+* **Slow Path**: SAVE, EVAL 등 블로킹 작업은 Virtual Thread에서 처리하여 다른 요청에 영향 없음
 
 ## Diagrams
 
@@ -92,13 +120,12 @@ graph TD
             %% Inbound Flow
             subgraph INBOUND ["Inbound Flow (Read)"]
                 H1["1. LineBasedFrameDecoder\n(ByteBuf -> ByteBuf [Framed])"]:::decoder
-                H2["2. StringDecoder\n(ByteBuf -> String)"]:::decoder
-                H3["4. PingPongHandler\n(Biz Logic)"]:::handler
+                H2["2. CommandHandler\n(Parse & Route)"]:::handler
             end
 
-            %% Outbound Flow
-            subgraph OUTBOUND ["Outbound Flow (Write)"]
-                H4["3. StringEncoder\n(String -> ByteBuf)"]:::encoder
+            %% Handlers
+            subgraph LOGIC ["Business Logic"]
+                H3["SetHandler\nGetHandler\nDeleteHandler\nMultiGetHandler"]:::handler
             end
         end
 
@@ -106,11 +133,9 @@ graph TD
         Client <==>|TCP/IP| SOCKET
         SOCKET ==>|ByteBuf Stream| H1
         H1 ==>|Frame| H2
-        H2 ==>|String| H3
+        H2 ==>|Dispatch| H3
         
-        %% [FIXED LINE] 점선 화살표 문법 수정
-        H3 -. "ctx.write('Pong')" .-> H4
-        H4 -. "Encoded Bytes" .-> SOCKET
+        H3 -. "Responses.send()" .-> SOCKET
         
         WORKER -.->|executes| HANDLERS
     end
@@ -137,31 +162,38 @@ graph TD
 sequenceDiagram
     participant C as Client
     participant S as Netty Server
-    participant H as Handler
-    participant M as DataStore
+    participant H as CommandHandler
+    participant M as DataStore (byte[])
 
     C->>S: Connect (TCP Handshake)
     
     Note over C, S: PING Command
-    C->>S: "Ping\n"
-    S->>H: channelRead("Ping")
-    H-->>S: writeAndFlush("Pong\n")
+    C->>S: "PING\n"
+    S->>H: channelRead0(ByteBuf)
+    H-->>S: Responses.pong(ctx)
     S-->>C: "Pong\n"
     
     Note over C, S: SET Command
     C->>S: "SET mykey hello\n"
-    S->>H: channelRead("SET mykey hello")
-    H->>M: put("mykey", "hello")
-    H-->>S: writeAndFlush("OK\n")
+    S->>H: channelRead0(ByteBuf)
+    H->>M: putIfAbsent("mykey", bytes)
+    H-->>S: Responses.ok(ctx)
     S-->>C: "OK\n"
     
     Note over C, S: GET Command
     C->>S: "GET mykey\n"
-    S->>H: channelRead("GET mykey")
+    S->>H: channelRead0(ByteBuf)
     H->>M: get("mykey")
-    M-->>H: "hello"
-    H-->>S: writeAndFlush("hello\n")
-    S-->>C: "hello\n"
+    M-->>H: byte[]
+    H-->>S: Responses.send(ctx, "value: hello\n")
+    S-->>C: "value: hello\n"
+    
+    Note over C, S: DEL Command
+    C->>S: "DEL mykey\n"
+    S->>H: channelRead0(ByteBuf)
+    H->>M: remove("mykey")
+    H-->>S: Responses.ok(ctx)
+    S-->>C: "OK\n"
 ```
 
 ## Data Flow Lifecycle
@@ -170,11 +202,31 @@ sequenceDiagram
 
 1.  **Ingress (Connection & Read):**
     * Client Connection $\rightarrow$ Boss Group (Accept) $\rightarrow$ Worker Group (Registration).
-    * Socket Read $\rightarrow$ **[Framing]** (Byte Stream assembly) $\rightarrow$ **[Decoding]** (Object instantiation).
+    * Socket Read $\rightarrow$ **[Framing]** (Byte Stream assembly) $\rightarrow$ CommandHandler.
 2.  **Processing (Execution):**
     * Decoded Command $\rightarrow$ Handler Routing $\rightarrow$ Business Logic Execution (e.g., `ConcurrentHashMap` Access).
 3.  **Egress (Write & Flush):**
-    * Execution Result $\rightarrow$ `ChannelHandlerContext.write()` $\rightarrow$ **[Encoding]** (Serialization) $\rightarrow$ Socket Buffer Flush $\rightarrow$ Client.
+    * Execution Result $\rightarrow$ `Responses.send()` $\rightarrow$ ByteBuf (Pooled/Constant) $\rightarrow$ Socket Buffer Flush $\rightarrow$ Client.
+
+## Project Structure
+
+```
+src/main/java/com/spica/
+├── Application.java              # Entry Point
+├── server/
+│   ├── Server.java               # Server Interface
+│   ├── ServerConfiguration.java  # Configuration (port, threads)
+│   └── NettyServer.java          # Netty Bootstrap & Pipeline
+└── handler/
+    ├── Responses.java            # ByteBuf 상수 & 풀링 유틸리티
+    ├── CommandHandler.java       # 명령어 파싱 & 라우팅
+    ├── SetHandler.java           # SET 명령어 처리
+    ├── GetHandler.java           # GET 명령어 처리
+    ├── DeleteHandler.java        # DEL 명령어 처리
+    ├── MultiGetHandler.java      # MGET 명령어 처리
+    ├── PingPongHandler.java      # PING 명령어 처리
+    └── SleepHandler.java         # SLEEP 명령어 처리 (테스트용)
+```
 
 ## How to Run
 
@@ -197,7 +249,7 @@ gradle run
 
 **1. Ping Test**
 ```bash
-echo "Ping" | nc localhost 6379
+echo "PING" | nc localhost 6379
 # 응답: Pong
 ```
 
@@ -210,9 +262,21 @@ echo "SET mykey myvalue" | nc localhost 6379
 **3. Get Test**
 ```bash
 echo "GET mykey" | nc localhost 6379
-# 응답: myvalue
+# 응답: value: myvalue
+```
+
+**4. Delete Test**
+```bash
+echo "DEL mykey" | nc localhost 6379
+# 응답: OK
+```
+
+**5. Multi-Get Test**
+```bash
+echo "MGET key1 key2 key3" | nc localhost 6379
+# 응답: 각 키별 결과
 ```
 
 ---
 
-updatedAt: 2025.12.2
+updatedAt: 2025.12.14
