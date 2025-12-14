@@ -96,7 +96,8 @@ public class CommandHandler extends SimpleChannelInboundHandler<String> {
                 sleepHandler.handle(input);
                 ctx.writeAndFlush("OK\n");
             } catch (Exception e) {
-                ctx.writeAndFlush("ERROR: " + e.getMessage() + "\n");
+                log.error("Error executing slow command '{}'", input[0], e);
+                ctx.writeAndFlush("ERROR: An internal error occurred while processing the command.\n");
             }
         });
     }
