@@ -1,6 +1,5 @@
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/b83d1e02-269b-4e15-8054-80e606d3516b" />
+<img width="3552" height="330" alt="image" src="https://github.com/user-attachments/assets/983be609-999d-4331-a37b-fc156c7932aa" />
 
-# SPiCa Server
 
 SPiCa는 **Netty** 프레임워크를 사용하여 구현된 고성능 **In-Memory Key-Value Store Server**입니다. <br/>
 클라이언트는 TCP를 통해 접속하여 `PING`, `SET`, `GET`, `DEL`, `MGET` 명령어를 사용할 수 있습니다.
