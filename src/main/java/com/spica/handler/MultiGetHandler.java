@@ -1,37 +1,31 @@
 package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.CharsetUtil;
 
 import java.util.Map;
 
-import static com.spica.handler.Responses.*;
+public class MultiGetHandler {
+    private final Map<String, String> store;
 
-public final class MultiGetHandler {
-
-    private static final int ESTIMATED_VALUE_SIZE = 32;
-
-    private final Map<String, byte[]> store;
-
-    public MultiGetHandler(final Map<String, byte[]> store) {
+    public MultiGetHandler(Map<String, String> store) {
         this.store = store;
     }
 
-    void handle(final ChannelHandlerContext ctx, final String[] args) {
-        final int keyCount = args.length - 1;
-        final StringBuilder response = new StringBuilder(keyCount * ESTIMATED_VALUE_SIZE);
+    void handle(final ChannelHandlerContext ctx, final String[] input) {
+        final String command = input[0];
+        final int keyCount = input.length - 1;
+        final StringBuilder responseBuilder = new StringBuilder();
 
         for (int i = 1; i <= keyCount; i++) {
-            final String key = args[i];
-            final byte[] valueBytes = store.get(key);
+            final String key = input[i];
+            final String value = store.getOrDefault(key, null);
 
-            if (valueBytes == null) {
-                response.append("존재하지 않는 key: ").append(key).append('\n');
+            if (value == null) {
+                responseBuilder.append("존재하지 않는 key: ").append(key).append("\n");
             } else {
-                response.append(new String(valueBytes, CharsetUtil.UTF_8)).append('\n');
+                responseBuilder.append(value).append("\n");
             }
         }
-
-        send(ctx, response.toString());
+        ctx.writeAndFlush(responseBuilder.toString());
     }
 }

@@ -9,21 +9,22 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
-
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public final class NettyServer implements Server {
-
+public class NettyServer implements Server {
     private static final Logger log = LoggerFactory.getLogger(NettyServer.class);
-
     private final ServerConfiguration config;
-    private final Map<String, byte[]> store = new ConcurrentHashMap<>();
+    private final Map<String, String> store = new ConcurrentHashMap<>();
 
     private final PingPongHandler pingPongHandler = new PingPongHandler();
     private final SleepHandler sleepHandler = new SleepHandler();
@@ -33,7 +34,6 @@ public final class NettyServer implements Server {
     private final MultiGetHandler multiGetHandler = new MultiGetHandler(store);
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
     private final CommandHandler commandHandler = new CommandHandler(executorService, pingPongHandler, sleepHandler, setHandler, getHandler, multiGetHandler, deleteHandler);
-
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
@@ -47,18 +47,20 @@ public final class NettyServer implements Server {
         bossGroup = new NioEventLoopGroup(config.bossThreads());
         workerGroup = new NioEventLoopGroup(config.workerThreads());
 
-        final ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(bossGroup, workerGroup)
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
-                    protected void initChannel(final SocketChannel ch) {
+                    protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new LineBasedFrameDecoder(config.maxFrameLength()));
+                        ch.pipeline().addLast(new StringDecoder(CharsetUtil.UTF_8));
+                        ch.pipeline().addLast(new StringEncoder(CharsetUtil.UTF_8));
                         ch.pipeline().addLast(commandHandler);
                     }
                 });
 
-        channelFuture = bootstrap.bind(config.port()).sync();
+        channelFuture = b.bind(config.port()).sync();
         log.info("Server started and bound to port {}", config.port());
     }
 

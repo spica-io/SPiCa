@@ -1,52 +1,46 @@
 package com.spica.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.CharsetUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import static com.spica.handler.Responses.*;
+public class SetHandler {
+    private final Map<String, String> store;
 
-public final class SetHandler {
-
-    private final Map<String, byte[]> store;
-
-    public SetHandler(final Map<String, byte[]> store) {
+    public SetHandler(final Map<String, String> store) {
         this.store = store;
     }
 
-    void setIfAbsent(final ChannelHandlerContext ctx, final String[] args) {
-        final String key = args[1];
-        final String value = args[2];
-        final byte[] valueBytes = value.getBytes(CharsetUtil.UTF_8);
+    void setIfAbsent(final ChannelHandlerContext ctx, final String[] input) {
 
-        if (store.putIfAbsent(key, valueBytes) != null) {
-            send(ctx, "중복 key: " + key + "\n");
+        final String command = input[0];
+        final String key = input[1];
+        final String value = input[2];
+
+        if (store.putIfAbsent(key, value) != null) {
+            ctx.writeAndFlush("중복 key: " + key + "\n");
             return;
         }
-
-        ok(ctx);
+        ctx.writeAndFlush("OK\n");
     }
 
-    void setIfMatches(final ChannelHandlerContext ctx, final String[] args) {
-        final String key = args[1];
-        final String newValue = args[2];
-        final String expectedOldValue = args[4];
+    void setIfMatches(final ChannelHandlerContext ctx, final String[] input) {
+        final String command = input[0];
+        final String key = input[1];
+        final String newValue = input[2];
+        final String oldValue = input[4];
 
-        final byte[] currentBytes = store.get(key);
-
-        if (currentBytes == null) {
-            send(ctx, "존재하지 않는 key: " + key + "\n");
-            return;
-        }
-
-        final String currentValue = new String(currentBytes, CharsetUtil.UTF_8);
-
-        if (currentValue.equals(expectedOldValue)) {
-            store.put(key, newValue.getBytes(CharsetUtil.UTF_8));
-            ok(ctx);
+        if (store.replace(key, oldValue, newValue)){
+            ctx.writeAndFlush("OK\n");
         } else {
-            send(ctx, "올바르지 않은 이전 값: " + expectedOldValue + "\n");
+            final String currentValue = store.getOrDefault(key, null);
+            if (currentValue == null) {
+                ctx.writeAndFlush("존재하지 않는 key: " + key + "\n");
+            } else {
+                ctx.writeAndFlush("올바르지 않은 이전 값: " + oldValue + "\n");
+            }
         }
     }
 }
